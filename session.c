@@ -10,7 +10,7 @@ void read_file(char *filename, char *buffer)
 	while ((*buffer++ = getc(f)) != EOF) ;
 }
 
-char *parse_seconds(size_t seconds, char *buffer) {
+char *format_seconds(size_t seconds, char *buffer) {
 	size_t hours = 0, minutes = 0;
 	while(seconds >= 3600) {
 		hours++;
@@ -32,6 +32,32 @@ char *parse_seconds(size_t seconds, char *buffer) {
 	return buffer;
 }
 
+size_t parse_to_seconds(char *str) {
+	size_t current_number = 0;
+	size_t total_seconds = 0;
+
+	while(*str != '\0') {
+		if (*str >= '0' && *str <= '9') {
+			current_number = (current_number*10) + (*str - '0');
+		} else {
+			switch (*str) {
+			case 'h':
+				total_seconds = current_number * 3600;
+				break;
+			case 'm':
+				total_seconds = current_number * 60;
+				break;
+			case 's':
+				total_seconds = current_number;
+				break;
+			}
+			current_number = 0;
+		}
+		str++;
+	}
+	return total_seconds;
+}
+
 int main(int argn, char **argv)
 {
 	char *session_state_filepath = "/tmp/.session_state";
@@ -42,7 +68,7 @@ int main(int argn, char **argv)
 
 	if (argn == 2) {
 		FILE *f = fopen(session_start_filepath, "w+");
-		fprintf(f, "%s", argv[1]);
+		fprintf(f, "%ld", parse_to_seconds(argv[1]));
 		fclose(f);
 		return 0;
 	}
@@ -56,7 +82,7 @@ int main(int argn, char **argv)
 
 		if (seconds > 0) {
 			FILE *f = fopen(session_state_filepath, "w+");
-			parse_seconds(seconds, output_buffer);
+			format_seconds(seconds, output_buffer);
 			printf("output: %s\n", output_buffer);
 			fprintf(f, "%s %s", output_buffer, "🔴");
 			fclose(f);
