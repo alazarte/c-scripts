@@ -21,7 +21,7 @@ typedef enum FILETYPE {
 const char *md5_check_command = "md5sum %s | cut -d' ' -f1";
 const char *gpg_decrypt_file_command = "gpg -d -r %s %s > %s\n";
 const char *gpg_encrypt_file_command = "gpg -e -r %s -o %s %s\n";
-const char *pdf_reader_command = "zathura";
+const char *pdf_reader_command = "mupdf";
 const char *media_player_command = "mpv";
 // TODO incomplete command
 const char *image_viewer_command =
