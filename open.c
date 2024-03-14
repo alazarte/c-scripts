@@ -11,7 +11,7 @@ typedef enum FILETYPE {
 	F_PGP,
 	F_ASCII,
 	F_PDF,
-	F_MP4,
+	F_MEDIA,
 	F_IMG,
 	F_HTML,
 	F_DIR,
@@ -152,9 +152,10 @@ FileType check_file_type(char *filename)
 	} else if (strstr(output, "PDF") != NULL) {
 		return F_PDF;
 	} else if (strstr(output, "ISO") != NULL) {
-		if (strstr(output, "MP4") != NULL) {
-			return F_MP4;
-		}
+		// TODO for now, all ISO files that I saw are media files
+		return F_MEDIA;
+	} else if (strstr(output, "WebM") != NULL) {
+		return F_MEDIA;
 	} else if (strstr(output, "PNG") != NULL) {
 		return F_IMG;
 	} else if (strstr(output, "JPEG") != NULL) {
@@ -186,6 +187,7 @@ void format_final_command(char *final_command, char *fname, char is_url)
 	char *format_command = "%s \"%s\"";
 
 	if (is_url) {
+		char *browser = getenv("BROWSER");
 		sprintf(final_command, format_command, getenv("BROWSER"),
 			fname);
 		return;
@@ -206,8 +208,8 @@ void format_final_command(char *final_command, char *fname, char is_url)
 		sprintf(final_command, format_command, pdf_reader_command,
 			fname);
 		break;
-	case F_MP4:
-		// TODO shouldn't be an option, should be F_MP4 and play with fplay or something
+	case F_MEDIA:
+		// TODO shouldn't be an option, should be F_MEDIA and play with fplay or something
 		sprintf(final_command, format_command, media_player_command,
 			fname);
 		break;
@@ -220,7 +222,7 @@ void format_final_command(char *final_command, char *fname, char is_url)
 			fname);
 		break;
 	case F_DEFAULT:
-		sprintf(final_command, "xdg-open %s", fname);
+		sprintf(final_command, format_command, "xdg-open", fname);
 		break;
 	}
 }
@@ -235,15 +237,14 @@ int main(int argn, char **argv)
 	char *fname = argv[1];
 	char is_url = 0;
 
-	int stat = access(fname, F_OK);
-	if (stat != 0) {
-		// TODO check if it's an URL, and parse it
-		fprintf(stderr, "File not found\n");
-		if (! valid_url(fname)) {
-			fprintf(stderr, "Not a valid URL either\n");
-			return 1;
-		}
+	if (valid_url(fname)) {
 		is_url = 1;
+	}
+
+	int stat = access(fname, F_OK);
+	if (stat != 0 && !is_url) {
+		fprintf(stderr, "File not found and not a valid url\n");
+		return 1;
 	}
 
 	char final_command[BUFFER_SIZE];
